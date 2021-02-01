@@ -12,6 +12,8 @@
 #define GOSSIP_XP_OFF           "I no longer wish to gain experience."
 #define GOSSIP_XP_ON            "I wish to start gaining experience again."
 
+#define CHROMIE_CONF_STABLE_MAX_PLAYER_LEVEL "Chromie.Stable.MaxPlayerLevel"
+
 class NpcExperienceChromie : public CreatureScript
 {
 public:
@@ -55,11 +57,16 @@ public:
             }
             else if (noXPGain)
             {
-                player->ModifyMoney(-toggleXpCost);
-                player->RemoveFlag(PLAYER_FLAGS, PLAYER_FLAGS_NO_XP_GAIN);
+                if (this->canUnlockExp(player))
+                {
+                    // UNLOCK EXP
+                    player->ModifyMoney(-toggleXpCost);
+                    player->RemoveFlag(PLAYER_FLAGS, PLAYER_FLAGS_NO_XP_GAIN);
+                }
             }
             else
             {
+                // LOCK EXP
                 player->ModifyMoney(-toggleXpCost);
                 player->SetFlag(PLAYER_FLAGS, PLAYER_FLAGS_NO_XP_GAIN);
             }
@@ -67,9 +74,28 @@ public:
         player->PlayerTalkClass->SendCloseGossip();
         return true;
     }
-};
 
-#define CHROMIE_CONF_STABLE_MAX_PLAYER_LEVEL "Chromie.Stable.MaxPlayerLevel"
+private:
+    bool canUnlockExp(Player* player)
+    {
+        if (player->getLevel() < sConfigMgr->GetIntDefault(CHROMIE_CONF_STABLE_MAX_PLAYER_LEVEL, 19))
+        {
+            return true;
+        }
+
+        auto result = CharacterDatabase.PQuery(
+            "SELECT `guid` FROM `chromie_beta_testers` WHERE `isBetaTester` = 1 AND `guid` = %u",
+            player->GetGUID()
+        );
+
+        if (!result)
+        {
+            return false;
+        }
+
+        return result->GetRowCount() > 0;
+    }
+};
 
 class AutoLockExp: public PlayerScript
 {
