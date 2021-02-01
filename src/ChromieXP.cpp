@@ -3,8 +3,9 @@
  * Copyright (C) 2016+ AzerothCore <www.azerothcore.org>
  */
 
-#include "ScriptMgr.h"
 #include "Common.h"
+#include "Config.h"
+#include "ScriptMgr.h"
 #include "World.h"
 
 #define GOSSIP_TEXT_EXP         14736
@@ -57,7 +58,7 @@ public:
                 player->ModifyMoney(-toggleXpCost);
                 player->RemoveFlag(PLAYER_FLAGS, PLAYER_FLAGS_NO_XP_GAIN);
             }
-            else if (!noXPGain)
+            else
             {
                 player->ModifyMoney(-toggleXpCost);
                 player->SetFlag(PLAYER_FLAGS, PLAYER_FLAGS_NO_XP_GAIN);
@@ -68,7 +69,24 @@ public:
     }
 };
 
-void AddNpcExperienceChromieScripts() {
+#define CHROMIE_CONF_STABLE_MAX_PLAYER_LEVEL "Chromie.Stable.MaxPlayerLevel"
+
+class AutoLockExp: public PlayerScript
+{
+public:
+    AutoLockExp() : PlayerScript("auto_lock_exp") {}
+
+    void OnLevelChanged(Player* player, uint8 oldlevel) override
+    {
+        if (oldlevel == sConfigMgr->GetIntDefault(CHROMIE_CONF_STABLE_MAX_PLAYER_LEVEL, 19) - 1)
+        {
+            player->SetFlag(PLAYER_FLAGS, PLAYER_FLAGS_NO_XP_GAIN);
+        }
+    }
+};
+
+void AddChromieXpScripts() {
     new NpcExperienceChromie();
+    new AutoLockExp();
 }
 

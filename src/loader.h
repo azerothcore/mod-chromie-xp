@@ -1,1 +1,1 @@
-void AddNpcExperienceChromieScripts();
+void AddChromieXpScripts();
