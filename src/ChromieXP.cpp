@@ -84,8 +84,8 @@ private:
         }
 
         auto result = CharacterDatabase.PQuery(
-            "SELECT `guid` FROM `chromie_beta_testers` WHERE `isBetaTester` = 1 AND `guid` = %u",
-            player->GetGUID()
+                "SELECT `guid` FROM `chromie_beta_testers` WHERE `isBetaTester` = 1 AND `guid` = %u",
+                player->GetGUID()
         );
 
         if (!result)
@@ -108,6 +108,17 @@ public:
         {
             player->SetFlag(PLAYER_FLAGS, PLAYER_FLAGS_NO_XP_GAIN);
         }
+    }
+
+    bool ShouldBeRewardedWithMoneyInsteadOfExp(Player* player) override
+    {
+        if (player->getLevel() == sConfigMgr->GetIntDefault(CHROMIE_CONF_STABLE_MAX_PLAYER_LEVEL, 19)
+            && player->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_NO_XP_GAIN))
+        {
+            return true;
+        }
+
+        return false;
     }
 };
 
