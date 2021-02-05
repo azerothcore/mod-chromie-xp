@@ -13,6 +13,8 @@
 #define GOSSIP_XP_ON            "I wish to start gaining experience again."
 
 #define CHROMIE_CONF_STABLE_MAX_PLAYER_LEVEL "Chromie.Stable.MaxPlayerLevel"
+#define SELECT_TESTER_QUERY "SELECT `guid` FROM `chromie_beta_testers` WHERE `isBetaTester` = 1 AND `guid` = %u"
+#define INSERT_TESTER_QUERY "INSERT IGNORE INTO `chromie_beta_testers` (`guid`, `isBetaTester`, `comment`) VALUES (%u, 1, CONCAT(NOW(), ' - %s'))"
 
 class NpcExperienceChromie : public CreatureScript
 {
@@ -83,10 +85,7 @@ private:
             return true;
         }
 
-        auto result = CharacterDatabase.PQuery(
-                "SELECT `guid` FROM `chromie_beta_testers` WHERE `isBetaTester` = 1 AND `guid` = %u",
-                player->GetGUID()
-        );
+        auto result = CharacterDatabase.PQuery(SELECT_TESTER_QUERY, player->GetGUID());
 
         if (!result)
         {
@@ -122,8 +121,60 @@ public:
     }
 };
 
+class BetaCommandScript : public CommandScript
+{
+public:
+    BetaCommandScript() : CommandScript("beta_commandscript") { }
+
+    std::vector<ChatCommand> GetCommands() const override
+    {
+        static std::vector<ChatCommand> betaCommandTable =
+        {
+            { "activate",   SEC_PLAYER, false,  &HandleGMListIngameCommand,        "" },
+        };
+        static std::vector<ChatCommand> commandTable =
+        {
+            { "beta",   SEC_PLAYER, false,nullptr,  "", betaCommandTable }
+        };
+        return commandTable;
+    }
+
+    static bool HandleGMListIngameCommand(ChatHandler* handler, char const* /*args*/)
+    {
+        // TODO: move hardcoded strings to the DB
+
+        auto player = handler->GetSession()->GetPlayer();
+
+        if (!player)
+        {
+            return false;
+        }
+
+        if (player->getLevel() < sConfigMgr->GetIntDefault(CHROMIE_CONF_STABLE_MAX_PLAYER_LEVEL, 19))
+        {
+            handler->SendSysMessage("Your level is too low to become a beta tester.");
+            return true;
+        }
+
+        auto result = CharacterDatabase.PQuery(SELECT_TESTER_QUERY, player->GetGUID());
+
+        if (result && result->GetRowCount() > 0)
+        {
+            handler->SendSysMessage("You are already a beta tester. Go test stuff and report bugs!");
+            return true;
+        }
+
+        CharacterDatabase.PQuery(INSERT_TESTER_QUERY, player->GetGUID(), player->GetName());
+        handler->SendSysMessage("Congratulations! You are now a ChromieCraft Beta Tester.\nYour mission is to help our project by testing the game contents and reporting bugs.");
+
+        return true;
+    }
+};
+
+
 void AddChromieXpScripts() {
     new NpcExperienceChromie();
     new AutoLockExp();
+    new BetaCommandScript();
 }
 
