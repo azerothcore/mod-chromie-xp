@@ -165,6 +165,12 @@ public:
         }
 
         CharacterDatabase.PQuery(INSERT_TESTER_QUERY, player->GetGUID(), player->GetName());
+
+        if (player->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_NO_XP_GAIN))
+        {
+            player->RemoveFlag(PLAYER_FLAGS, PLAYER_FLAGS_NO_XP_GAIN);
+        }
+
         handler->SendSysMessage("Congratulations! You are now a ChromieCraft Beta Tester.\nYour mission is to help our project by testing the game contents and reporting bugs.");
 
         return true;
