@@ -121,6 +121,11 @@ public:
     }
 };
 
+#define CHROMIE_STRING_START 90000
+#define TEXT_LEVEL_TOO_LOW CHROMIE_STRING_START+0
+#define TEXT_ALREADY_TESTER CHROMIE_STRING_START+1
+#define TEXT_TESTER_SUCCESS CHROMIE_STRING_START+2
+
 class BetaCommandScript : public CommandScript
 {
 public:
@@ -141,8 +146,6 @@ public:
 
     static bool HandleGMListIngameCommand(ChatHandler* handler, char const* /*args*/)
     {
-        // TODO: move hardcoded strings to the DB
-
         auto player = handler->GetSession()->GetPlayer();
 
         if (!player)
@@ -152,7 +155,7 @@ public:
 
         if (player->getLevel() < sConfigMgr->GetIntDefault(CHROMIE_CONF_STABLE_MAX_PLAYER_LEVEL, 19))
         {
-            handler->SendSysMessage("Your level is too low to become a beta tester.");
+            handler->SendSysMessage(TEXT_LEVEL_TOO_LOW);
             return true;
         }
 
@@ -160,7 +163,7 @@ public:
 
         if (result && result->GetRowCount() > 0)
         {
-            handler->SendSysMessage("You are already a beta tester. Go test stuff and report bugs!");
+            handler->SendSysMessage(TEXT_ALREADY_TESTER);
             return true;
         }
 
@@ -171,7 +174,7 @@ public:
             player->RemoveFlag(PLAYER_FLAGS, PLAYER_FLAGS_NO_XP_GAIN);
         }
 
-        handler->SendSysMessage("Congratulations! You are now a ChromieCraft Beta Tester.\nYour mission is to help our project by testing the game contents and reporting bugs.");
+        handler->SendSysMessage(TEXT_TESTER_SUCCESS);
 
         return true;
     }
