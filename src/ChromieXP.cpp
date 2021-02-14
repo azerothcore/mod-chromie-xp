@@ -8,25 +8,32 @@
 #include "ScriptMgr.h"
 #include "World.h"
 
+#define CHROMIE_CONF_STABLE_MAX_PLAYER_LEVEL "Chromie.Stable.MaxPlayerLevel"
+#define CHROMIE_STABLE_CAP sConfigMgr->GetIntDefault(CHROMIE_CONF_STABLE_MAX_PLAYER_LEVEL, 19)
+#define CHROMIE_BETA_CAP sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL)
+
 #define GOSSIP_TEXT_EXP         14736
 #define GOSSIP_XP_OFF           "I no longer wish to gain experience."
 #define GOSSIP_XP_ON            "I wish to start gaining experience again."
 
-#define CHROMIE_CONF_STABLE_MAX_PLAYER_LEVEL "Chromie.Stable.MaxPlayerLevel"
 #define SELECT_TESTER_QUERY "SELECT `guid` FROM `chromie_beta_testers` WHERE `isBetaTester` = 1 AND `guid` = %u"
 #define INSERT_TESTER_QUERY "INSERT IGNORE INTO `chromie_beta_testers` (`guid`, `isBetaTester`, `comment`) VALUES (%u, 1, CONCAT(NOW(), ' - %s'))"
 
 bool canUnlockExp(Player* player)
 {
-    // If the player level is lower than STABLE_MAX_PLAYER_LEVEL, allow to unlock exp
+    // If the player level is equal or higher than the CHROMIE_BETA_CAP, allow
+    if (player->getLevel() >= CHROMIE_BETA_CAP)
+    {
+        return false;
+    }
 
-    if (player->getLevel() < sConfigMgr->GetIntDefault(CHROMIE_CONF_STABLE_MAX_PLAYER_LEVEL, 19))
+    // If the player level is lower than CHROMIE_STABLE_CAP, allow to unlock exp
+    if (player->getLevel() < CHROMIE_STABLE_CAP)
     {
         return true;
     }
 
     // Otherwise, allow only if the player is BETA TESTER
-
     auto result = CharacterDatabase.PQuery(SELECT_TESTER_QUERY, player->GetGUID());
 
     if (!result)
@@ -108,7 +115,7 @@ public:
 
     void OnLevelChanged(Player* player, uint8 oldlevel) override
     {
-        if (oldlevel == sConfigMgr->GetIntDefault(CHROMIE_CONF_STABLE_MAX_PLAYER_LEVEL, 19) - 1)
+        if (oldlevel == CHROMIE_STABLE_CAP - 1 || oldlevel == CHROMIE_BETA_CAP - 1)
         {
             player->SetFlag(PLAYER_FLAGS, PLAYER_FLAGS_NO_XP_GAIN);
         }
@@ -116,7 +123,7 @@ public:
 
     bool ShouldBeRewardedWithMoneyInsteadOfExp(Player* player) override
     {
-        if (player->getLevel() == sConfigMgr->GetIntDefault(CHROMIE_CONF_STABLE_MAX_PLAYER_LEVEL, 19)
+        if (player->getLevel() == CHROMIE_STABLE_CAP
             && player->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_NO_XP_GAIN))
         {
             return true;
@@ -169,9 +176,9 @@ public:
         {
             player->RemoveFlag(PLAYER_FLAGS, PLAYER_FLAGS_NO_XP_GAIN);
         }
-        else
+        else if (player->getLevel() < CHROMIE_BETA_CAP)
         {
-            handler->SendSysMessage(TEXT_ONLY_TESTERS_ALLOWED);
+            handler->PSendSysMessage(TEXT_ONLY_TESTERS_ALLOWED);
             return true;
         }
 
@@ -200,9 +207,9 @@ public:
             return false;
         }
 
-        if (player->getLevel() < sConfigMgr->GetIntDefault(CHROMIE_CONF_STABLE_MAX_PLAYER_LEVEL, 19))
+        if (player->getLevel() < CHROMIE_STABLE_CAP)
         {
-            handler->SendSysMessage(TEXT_LEVEL_TOO_LOW);
+            handler->PSendSysMessage(TEXT_LEVEL_TOO_LOW, CHROMIE_STABLE_CAP);
             return true;
         }
 
@@ -210,7 +217,7 @@ public:
 
         if (result && result->GetRowCount() > 0)
         {
-            handler->SendSysMessage(TEXT_ALREADY_TESTER);
+            handler->PSendSysMessage(TEXT_ALREADY_TESTER);
             return true;
         }
 
@@ -221,7 +228,7 @@ public:
             player->RemoveFlag(PLAYER_FLAGS, PLAYER_FLAGS_NO_XP_GAIN);
         }
 
-        handler->SendSysMessage(TEXT_TESTER_SUCCESS);
+        handler->PSendSysMessage(TEXT_TESTER_SUCCESS);
 
         return true;
     }
