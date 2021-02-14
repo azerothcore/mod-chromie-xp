@@ -123,6 +123,9 @@ public:
 
     bool ShouldBeRewardedWithMoneyInsteadOfExp(Player* player) override
     {
+        // NOTE: this is in order to reward the Player with money instead of exp
+        // even if the player has not reached the global server cap
+
         if (player->getLevel() == CHROMIE_STABLE_CAP
             && player->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_NO_XP_GAIN))
         {
