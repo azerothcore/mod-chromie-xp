@@ -16,6 +16,29 @@
 #define SELECT_TESTER_QUERY "SELECT `guid` FROM `chromie_beta_testers` WHERE `isBetaTester` = 1 AND `guid` = %u"
 #define INSERT_TESTER_QUERY "INSERT IGNORE INTO `chromie_beta_testers` (`guid`, `isBetaTester`, `comment`) VALUES (%u, 1, CONCAT(NOW(), ' - %s'))"
 
+bool canUnlockExp(Player* player)
+{
+    // If the player level is lower than STABLE_MAX_PLAYER_LEVEL, allow to unlock exp
+
+    if (player->getLevel() < sConfigMgr->GetIntDefault(CHROMIE_CONF_STABLE_MAX_PLAYER_LEVEL, 19))
+    {
+        return true;
+    }
+
+    // Otherwise, allow only if the player is BETA TESTER
+
+    auto result = CharacterDatabase.PQuery(SELECT_TESTER_QUERY, player->GetGUID());
+
+    if (!result)
+    {
+        return false;
+    }
+
+    return result->GetRowCount() > 0;
+}
+
+// NOTE: this is almost the same as in AC (npc_experience without _chromie)
+// we just added the canUnlockExp check inside it
 class NpcExperienceChromie : public CreatureScript
 {
 public:
@@ -59,7 +82,7 @@ public:
             }
             else if (noXPGain)
             {
-                if (this->canUnlockExp(player))
+                if (canUnlockExp(player))
                 {
                     // UNLOCK EXP
                     player->ModifyMoney(-toggleXpCost);
@@ -75,24 +98,6 @@ public:
         }
         player->PlayerTalkClass->SendCloseGossip();
         return true;
-    }
-
-private:
-    bool canUnlockExp(Player* player)
-    {
-        if (player->getLevel() < sConfigMgr->GetIntDefault(CHROMIE_CONF_STABLE_MAX_PLAYER_LEVEL, 19))
-        {
-            return true;
-        }
-
-        auto result = CharacterDatabase.PQuery(SELECT_TESTER_QUERY, player->GetGUID());
-
-        if (!result)
-        {
-            return false;
-        }
-
-        return result->GetRowCount() > 0;
     }
 };
 
@@ -125,26 +130,68 @@ public:
 #define TEXT_LEVEL_TOO_LOW CHROMIE_STRING_START+0
 #define TEXT_ALREADY_TESTER CHROMIE_STRING_START+1
 #define TEXT_TESTER_SUCCESS CHROMIE_STRING_START+2
+#define TEXT_ONLY_TESTERS_ALLOWED CHROMIE_STRING_START+3
 
-class BetaCommandScript : public CommandScript
+class ChromieCommandScript : public CommandScript
 {
 public:
-    BetaCommandScript() : CommandScript("beta_commandscript") { }
+    ChromieCommandScript() : CommandScript("beta_commandscript") { }
 
     std::vector<ChatCommand> GetCommands() const override
     {
         static std::vector<ChatCommand> betaCommandTable =
         {
-            { "activate",   SEC_PLAYER, false,  &HandleGMListIngameCommand,        "" },
+            { "activate",   SEC_PLAYER, false,  &HandleBetaActivateCommand,        "" },
+        };
+        static std::vector<ChatCommand> xpCommandTable =
+        {
+            { "on",    SEC_PLAYER, false,  &HandleXpOnCommand,         "" },
+            { "off",   SEC_PLAYER, false,  &HandleXpOffCommand,        "" },
         };
         static std::vector<ChatCommand> commandTable =
         {
-            { "beta",   SEC_PLAYER, false,nullptr,  "", betaCommandTable }
+            { "beta",   SEC_PLAYER, false,nullptr,  "", betaCommandTable },
+            { "xp",     SEC_PLAYER, false,nullptr,  "", xpCommandTable },
         };
         return commandTable;
     }
 
-    static bool HandleGMListIngameCommand(ChatHandler* handler, char const* /*args*/)
+    static bool HandleXpOnCommand(ChatHandler* handler, char const* /*args*/)
+    {
+        auto player = handler->GetSession()->GetPlayer();
+
+        if (!player)
+        {
+            return false;
+        }
+
+        if (canUnlockExp(player))
+        {
+            player->RemoveFlag(PLAYER_FLAGS, PLAYER_FLAGS_NO_XP_GAIN);
+        }
+        else
+        {
+            handler->SendSysMessage(TEXT_ONLY_TESTERS_ALLOWED);
+            return true;
+        }
+
+        return true;
+    }
+
+    static bool HandleXpOffCommand(ChatHandler* handler, char const* /*args*/)
+    {
+        auto player = handler->GetSession()->GetPlayer();
+
+        if (!player)
+        {
+            return false;
+        }
+
+        player->SetFlag(PLAYER_FLAGS, PLAYER_FLAGS_NO_XP_GAIN);
+        return true;
+    }
+
+    static bool HandleBetaActivateCommand(ChatHandler* handler, char const* /*args*/)
     {
         auto player = handler->GetSession()->GetPlayer();
 
@@ -184,6 +231,6 @@ public:
 void AddChromieXpScripts() {
     new NpcExperienceChromie();
     new AutoLockExp();
-    new BetaCommandScript();
+    new ChromieCommandScript();
 }
 
