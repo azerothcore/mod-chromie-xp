@@ -21,7 +21,7 @@
 
 bool canUnlockExp(Player* player)
 {
-    // If the player level is equal or higher than the CHROMIE_BETA_CAP, allow
+    // If the player level is equal or higher than the CHROMIE_BETA_CAP, do NOT allow
     if (player->getLevel() >= CHROMIE_BETA_CAP)
     {
         return false;
