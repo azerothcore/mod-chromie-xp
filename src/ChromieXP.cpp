@@ -6,6 +6,7 @@
 #include "Common.h"
 #include "Config.h"
 #include "ScriptMgr.h"
+#include "Player.h"
 #include "World.h"
 
 #define CHROMIE_CONF_STABLE_MAX_PLAYER_LEVEL "Chromie.Stable.MaxPlayerLevel"
