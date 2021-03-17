@@ -5,6 +5,7 @@
 
 #include "Common.h"
 #include "Config.h"
+#include "ScriptedGossip.h"
 #include "ScriptMgr.h"
 #include "Player.h"
 #include "World.h"
