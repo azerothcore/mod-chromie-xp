@@ -3,6 +3,7 @@
  * Copyright (C) 2016+ AzerothCore <www.azerothcore.org>
  */
 
+#include "Chat.h"
 #include "Common.h"
 #include "Config.h"
 #include "ScriptedGossip.h"
@@ -36,7 +37,7 @@ bool canUnlockExp(Player* player)
     }
 
     // Otherwise, allow only if the player is BETA TESTER
-    auto result = CharacterDatabase.PQuery(SELECT_TESTER_QUERY, player->GetGUID());
+    auto result = CharacterDatabase.PQuery(SELECT_TESTER_QUERY, player->GetGUID().GetCounter());
 
     if (!result)
     {
@@ -218,7 +219,7 @@ public:
             return true;
         }
 
-        auto result = CharacterDatabase.PQuery(SELECT_TESTER_QUERY, player->GetGUID());
+        auto result = CharacterDatabase.PQuery(SELECT_TESTER_QUERY, player->GetGUID().GetCounter());
 
         if (result && result->GetRowCount() > 0)
         {
@@ -226,7 +227,7 @@ public:
             return true;
         }
 
-        CharacterDatabase.PQuery(INSERT_TESTER_QUERY, player->GetGUID(), player->GetName());
+        CharacterDatabase.PQuery(INSERT_TESTER_QUERY, player->GetGUID().GetCounter(), player->GetName());
 
         if (player->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_NO_XP_GAIN))
         {
