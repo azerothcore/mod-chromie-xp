@@ -3,6 +3,7 @@
  * Copyright (C) 2016+ AzerothCore <www.azerothcore.org>
  */
 
+#include "Chat.h"
 #include "Common.h"
 #include "Config.h"
 #include "ScriptedGossip.h"
