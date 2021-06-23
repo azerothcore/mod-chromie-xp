@@ -1,5 +1,7 @@
 # mode-chromie-xp
 
+This module has been developed for [ChromieCraft](http://chromiecraft.com/) to allow players to use `.beta activate` and go further with their progression.
+
 ## SQL Utils
 
 ### Flag toggle
