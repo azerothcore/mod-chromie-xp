@@ -18,9 +18,6 @@ UPDATE `characters` SET `playerFlags` = `playerFlags` | @LOCK_FLAG WHERE `name` 
 -- Unlock character XP - NOTE: the character MUST be offline.
 UPDATE `characters` SET `playerFlags` = `playerFlags` & ~@LOCK_FLAG WHERE `name` = 'Craft';
 
--- Check which players have the XP locked
-SELECT * FROM `characters` WHERE playerFlags & @LOCK_FLAG = @LOCK_FLAG;
-
 ```
 
 ### Add beta tester
