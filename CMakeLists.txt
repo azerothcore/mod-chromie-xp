@@ -1,4 +1,0 @@
-AC_ADD_SCRIPT("${CMAKE_CURRENT_LIST_DIR}/src/ChromieXP.cpp")
-AC_ADD_SCRIPT_LOADER("ChromieXp" "${CMAKE_CURRENT_LIST_DIR}/src/loader.h")
-
-AC_ADD_CONFIG_FILE("${CMAKE_CURRENT_LIST_DIR}/conf/chromie-xp.conf.dist")
