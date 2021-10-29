@@ -1,6 +1,18 @@
 /*
- * Copyright (C) 2021+ ChromieCraft <www.chromiecraft.com>
- * Copyright (C) 2016+ AzerothCore <www.azerothcore.org>
+ * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by the
+ * Free Software Foundation; either version 3 of the License, or (at your
+ * option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "Chat.h"
@@ -11,16 +23,15 @@
 #include "Player.h"
 #include "World.h"
 
-#define CHROMIE_CONF_STABLE_MAX_PLAYER_LEVEL "Chromie.Stable.MaxPlayerLevel"
-#define CHROMIE_STABLE_CAP sConfigMgr->GetIntDefault(CHROMIE_CONF_STABLE_MAX_PLAYER_LEVEL, 19)
+#define CHROMIE_STABLE_CAP sConfigMgr->GetOption<uint8>("Chromie.Stable.MaxPlayerLevel", 19)
 #define CHROMIE_BETA_CAP sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL)
 
-#define GOSSIP_TEXT_EXP         14736
-#define GOSSIP_XP_OFF           "I no longer wish to gain experience."
-#define GOSSIP_XP_ON            "I wish to start gaining experience again."
+constexpr auto GOSSIP_TEXT_EXP = 14736;
+constexpr auto GOSSIP_XP_OFF = "I no longer wish to gain experience.";
+constexpr auto GOSSIP_XP_ON = "I wish to start gaining experience again.";
 
-#define SELECT_TESTER_QUERY "SELECT `guid` FROM `chromie_beta_testers` WHERE `isBetaTester` = 1 AND `guid` = %u"
-#define INSERT_TESTER_QUERY "INSERT IGNORE INTO `chromie_beta_testers` (`guid`, `isBetaTester`, `comment`) VALUES (%u, 1, CONCAT(NOW(), ' - %s'))"
+constexpr auto SELECT_TESTER_QUERY = "SELECT `guid` FROM `chromie_beta_testers` WHERE `isBetaTester` = 1 AND `guid` = %u";
+constexpr auto INSERT_TESTER_QUERY = "INSERT IGNORE INTO `chromie_beta_testers` (`guid`, `isBetaTester`, `comment`) VALUES (%u, 1, CONCAT(NOW(), ' - %s'))";
 
 bool canUnlockExp(Player* player)
 {
@@ -76,14 +87,15 @@ public:
                 if (!noXPGain)//does gain xp
                     doSwitch = true;//switch to don't gain xp
             }
-                break;
+            break;
             case GOSSIP_ACTION_INFO_DEF + 2://xp on
             {
                 if (noXPGain)//doesn't gain xp
                     doSwitch = true;//switch to gain xp
             }
-                break;
+            break;
         }
+
         if (doSwitch)
         {
             if (!player->HasEnoughMoney(toggleXpCost))
@@ -106,6 +118,7 @@ public:
                 player->SetFlag(PLAYER_FLAGS, PLAYER_FLAGS_NO_XP_GAIN);
             }
         }
+
         player->PlayerTalkClass->SendCloseGossip();
         return true;
     }
@@ -139,37 +152,42 @@ public:
     }
 };
 
-#define CHROMIE_STRING_START 90000
-#define TEXT_LEVEL_TOO_LOW CHROMIE_STRING_START+0
-#define TEXT_ALREADY_TESTER CHROMIE_STRING_START+1
-#define TEXT_TESTER_SUCCESS CHROMIE_STRING_START+2
-#define TEXT_ONLY_TESTERS_ALLOWED CHROMIE_STRING_START+3
+constexpr auto CHROMIE_STRING_START = 90000;
+constexpr auto TEXT_LEVEL_TOO_LOW = CHROMIE_STRING_START;
+constexpr auto TEXT_ALREADY_TESTER = CHROMIE_STRING_START + 1;
+constexpr auto TEXT_TESTER_SUCCESS = CHROMIE_STRING_START + 2;
+constexpr auto TEXT_ONLY_TESTERS_ALLOWED = CHROMIE_STRING_START + 3;
+
+using namespace Acore::ChatCommands;
 
 class ChromieCommandScript : public CommandScript
 {
 public:
     ChromieCommandScript() : CommandScript("beta_commandscript") { }
 
-    std::vector<ChatCommand> GetCommands() const override
+    ChatCommandTable GetCommands() const override
     {
-        static std::vector<ChatCommand> betaCommandTable =
+        static ChatCommandTable betaCommandTable =
         {
-            { "activate",   SEC_PLAYER, false,  &HandleBetaActivateCommand,        "" },
+            { "activate",   HandleBetaActivateCommand,  SEC_PLAYER, Console::No },
         };
-        static std::vector<ChatCommand> xpCommandTable =
+
+        static ChatCommandTable xpCommandTable =
         {
-            { "on",    SEC_PLAYER, false,  &HandleXpOnCommand,         "" },
-            { "off",   SEC_PLAYER, false,  &HandleXpOffCommand,        "" },
+            { "on",         HandleXpOnCommand,          SEC_PLAYER, Console::No},
+            { "off",        HandleXpOffCommand,         SEC_PLAYER, Console::No},
         };
-        static std::vector<ChatCommand> commandTable =
+
+        static ChatCommandTable commandTable =
         {
-            { "beta",   SEC_PLAYER, false,nullptr,  "", betaCommandTable },
-            { "xp",     SEC_PLAYER, false,nullptr,  "", xpCommandTable },
+            { "beta",   betaCommandTable },
+            { "xp",     xpCommandTable },
         };
+
         return commandTable;
     }
 
-    static bool HandleXpOnCommand(ChatHandler* handler, char const* /*args*/)
+    static bool HandleXpOnCommand(ChatHandler* handler)
     {
         auto player = handler->GetSession()->GetPlayer();
 
@@ -191,7 +209,7 @@ public:
         return true;
     }
 
-    static bool HandleXpOffCommand(ChatHandler* handler, char const* /*args*/)
+    static bool HandleXpOffCommand(ChatHandler* handler)
     {
         auto player = handler->GetSession()->GetPlayer();
 
@@ -204,7 +222,7 @@ public:
         return true;
     }
 
-    static bool HandleBetaActivateCommand(ChatHandler* handler, char const* /*args*/)
+    static bool HandleBetaActivateCommand(ChatHandler* handler)
     {
         auto player = handler->GetSession()->GetPlayer();
 
@@ -241,7 +259,8 @@ public:
 };
 
 
-void AddChromieXpScripts() {
+void AddChromieXpScripts()
+{
     new NpcExperienceChromie();
     new AutoLockExp();
     new ChromieCommandScript();
