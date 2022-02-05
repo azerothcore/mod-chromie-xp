@@ -237,7 +237,7 @@ public:
             return true;
         }
 
-        auto result = CharacterDatabase.PQuery(SELECT_TESTER_QUERY, player->GetGUID().GetCounter());
+        auto result = CharacterDatabase.Query(SELECT_TESTER_QUERY, player->GetGUID().GetCounter());
 
         if (result && result->GetRowCount() > 0)
         {
@@ -245,7 +245,7 @@ public:
             return true;
         }
 
-        CharacterDatabase.PQuery(INSERT_TESTER_QUERY, player->GetGUID().GetCounter(), player->GetName());
+        CharacterDatabase.Query(INSERT_TESTER_QUERY, player->GetGUID().GetCounter(), player->GetName());
 
         if (player->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_NO_XP_GAIN))
         {
