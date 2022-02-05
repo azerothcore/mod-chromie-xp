@@ -30,8 +30,8 @@ constexpr auto GOSSIP_TEXT_EXP = 14736;
 constexpr auto GOSSIP_XP_OFF = "I no longer wish to gain experience.";
 constexpr auto GOSSIP_XP_ON = "I wish to start gaining experience again.";
 
-constexpr auto SELECT_TESTER_QUERY = "SELECT `guid` FROM `chromie_beta_testers` WHERE `isBetaTester` = 1 AND `guid` = %u";
-constexpr auto INSERT_TESTER_QUERY = "INSERT IGNORE INTO `chromie_beta_testers` (`guid`, `isBetaTester`, `comment`) VALUES (%u, 1, CONCAT(NOW(), ' - %s'))";
+constexpr auto SELECT_TESTER_QUERY = "SELECT `guid` FROM `chromie_beta_testers` WHERE `isBetaTester` = 1 AND `guid` = {}";
+constexpr auto INSERT_TESTER_QUERY = "INSERT IGNORE INTO `chromie_beta_testers` (`guid`, `isBetaTester`, `comment`) VALUES ({}, 1, CONCAT(NOW(), ' - {}'))";
 
 bool canUnlockExp(Player* player)
 {
