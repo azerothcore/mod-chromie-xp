@@ -36,13 +36,13 @@ constexpr auto INSERT_TESTER_QUERY = "INSERT IGNORE INTO `chromie_beta_testers` 
 bool canUnlockExp(Player* player)
 {
     // If the player level is equal or higher than the CHROMIE_BETA_CAP, do NOT allow
-    if (player->getLevel() >= CHROMIE_BETA_CAP)
+    if (player->GetLevel() >= CHROMIE_BETA_CAP)
     {
         return false;
     }
 
     // If the player level is lower than CHROMIE_STABLE_CAP, allow to unlock exp
-    if (player->getLevel() < CHROMIE_STABLE_CAP)
+    if (player->GetLevel() < CHROMIE_STABLE_CAP)
     {
         return true;
     }
@@ -142,7 +142,7 @@ public:
         // NOTE: this is in order to reward the Player with money instead of exp
         // even if the player has not reached the global server cap
 
-        if (player->getLevel() == CHROMIE_STABLE_CAP
+        if (player->GetLevel() == CHROMIE_STABLE_CAP
             && player->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_NO_XP_GAIN))
         {
             return true;
@@ -200,7 +200,7 @@ public:
         {
             player->RemoveFlag(PLAYER_FLAGS, PLAYER_FLAGS_NO_XP_GAIN);
         }
-        else if (player->getLevel() < CHROMIE_BETA_CAP)
+        else if (player->GetLevel() < CHROMIE_BETA_CAP)
         {
             handler->PSendSysMessage(TEXT_ONLY_TESTERS_ALLOWED);
             return true;
@@ -231,7 +231,7 @@ public:
             return false;
         }
 
-        if (player->getLevel() < CHROMIE_STABLE_CAP)
+        if (player->GetLevel() < CHROMIE_STABLE_CAP)
         {
             handler->PSendSysMessage(TEXT_LEVEL_TOO_LOW, CHROMIE_STABLE_CAP);
             return true;
