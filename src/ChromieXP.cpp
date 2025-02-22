@@ -127,7 +127,10 @@ public:
 class AutoLockExp: public PlayerScript
 {
 public:
-    AutoLockExp() : PlayerScript("auto_lock_exp") {}
+    AutoLockExp() : PlayerScript("auto_lock_exp", {
+        PLAYERHOOK_ON_LEVEL_CHANGED,
+        PLAYERHOOK_SHOULD_BE_REWARDED_WITH_MONEY_INSTEAD_OF_EXP
+    }) {}
 
     void OnLevelChanged(Player* player, uint8 oldlevel) override
     {
